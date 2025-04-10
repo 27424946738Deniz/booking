@@ -1,0 +1,5 @@
+RoomName,Price,RoomsLeft,MealPlan,CancelPolicy
+"Çift Kişilik veya İki Yataklı Oda",50,10,"",""
+"Deluxe Çift Kişilik Oda",70,1,"",""
+"Üç Kişilik Oda",75,6,"",""
+"Tek Kişilik Oda",40,6,"",""

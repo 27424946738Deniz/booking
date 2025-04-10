@@ -1,0 +1,7 @@
+RoomName,Price,RoomsLeft,MealPlan,CancelPolicy
+"Ekonomik Çift Kişilik veya İki Yataklı Oda",46,10,"",""
+"Standart Çift Kişilik veya İki Yataklı Oda",75,5,"",""
+"Standart Üç Kişilik Oda",82,2,"",""
+"Standart Aile Odası",96,2,"",""
+"Tek Kişilik Ekonomik Oda",37,10,"",""
+"Standart Tek Kişilik Oda",64,5,"",""

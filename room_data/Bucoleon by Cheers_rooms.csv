@@ -1,0 +1,13 @@
+RoomName,Price,RoomsLeft,MealPlan,CancelPolicy
+"Ekonomik Çift Kişilik Oda",46,4,"",""
+"Standart Çift Kişilik Oda",47,2,"",""
+"Deluxe Çift Kişilik Oda",51,2,"",""
+"Deluxe Üç Kişilik Oda",56,1,"",""
+"Standart Üç Kişilik Oda",56,1,"",""
+"Dört Kişilik Standart Oda",74,1,"",""
+"Süit - Spa Küvetli",121,1,"",""
+"8 Yataklı Karma Yatakhanede 1 Yatak",13,1,"",""
+"Altı Yataklı Karma Yatakhanede Yatak",14,1,"",""
+"Altı Yataklı Kadın Yatakhanesinde Yatak",15,1,"",""
+"Dört Yataklı Karma Yatakhanede 1 Yatak",17,2,"",""
+"Tek Kişilik Oda",46,1,"",""

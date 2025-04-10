@@ -1,0 +1,11 @@
+RoomName,Price,RoomsLeft,MealPlan,CancelPolicy
+"Standart Çift Kişilik Oda",32,10,"",""
+"Deluxe Çift Kişilik Oda",41,1,"",""
+"Superior Çift Kişilik Oda",36,3,"",""
+"İki Yataklı Oda",36,2,"",""
+"Deluxe Üç Kişilik Oda",53,5,"",""
+"Üç Kişilik Oda",53,1,"",""
+"Aile Odası",61,1,"",""
+"Üç Yatak Odalı Süit",97,2,"",""
+"İki Yatak Odalı Daire",97,2,"",""
+"Tek Kişilik Oda",32,2,"",""

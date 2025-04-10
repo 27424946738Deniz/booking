@@ -1,0 +1,5 @@
+RoomName,Price,RoomsLeft,MealPlan,CancelPolicy
+"Ekonomik Çift Kişilik Oda",44,3,"",""
+"Standart Çift Kişilik Oda",47,1,"",""
+"Ekonomik Üç Kişilik Oda",61,1,"",""
+"Standart Üç Kişilik Oda",102,2,"",""

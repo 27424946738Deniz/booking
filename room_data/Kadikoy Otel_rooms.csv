@@ -1,0 +1,6 @@
+RoomName,Price,RoomsLeft,MealPlan,CancelPolicy
+"Standart İki Yataklı Oda",56,10,"",""
+"Büyük Çift Kişilik Oda",60,2,"",""
+"Üç Kişilik Oda",70,1,"",""
+"Aile Odası",70,1,"",""
+"Tek Kişilik Oda",47,1,"",""

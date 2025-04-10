@@ -1,0 +1,10 @@
+RoomName,Price,RoomsLeft,MealPlan,CancelPolicy
+"Standart Çift Kişilik Oda",53,6,"",""
+"Standart Üç Kişilik Oda",62,1,"",""
+"Standart Çift Kişilik Süit",64,3,"",""
+"Junior Süit",67,2,"",""
+"Deluxe Junior Süit",79,4,"",""
+"Standart Süit",84,4,"",""
+"Superior Süit",84,2,"",""
+"Tek Kişilik Ekonomik Oda",40,2,"",""
+"Büyük Tek Kişilik Oda",44,1,"",""

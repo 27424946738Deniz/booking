@@ -1,0 +1,6 @@
+RoomName,Price,RoomsLeft,MealPlan,CancelPolicy
+"Ekonomik Çift Kişilik veya İki Yataklı Oda",42,5,"",""
+"Çift Kişilik veya İki Yataklı Oda",55,5,"",""
+"Üç Kişilik Oda",68,5,"",""
+"Dört Kişilik Oda",76,2,"",""
+"Tek Kişilik Oda",45,10,"",""

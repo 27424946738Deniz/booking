@@ -1,0 +1,6 @@
+RoomName,Price,RoomsLeft,MealPlan,CancelPolicy
+"Deluxe Oda",30,2,"",""
+"Standart Çift Kişilik Oda",30,3,"",""
+"Standart Çift Kişilik veya İki Yataklı Oda",31,3,"",""
+"Standart Üç Kişilik Oda",32,2,"",""
+"Deluxe Üç Kişilik Oda",36,4,"",""

@@ -1,0 +1,6 @@
+RoomName,Price,RoomsLeft,MealPlan,CancelPolicy
+"Çift Kişilik Oda",41,9,"",""
+"Üç Kişilik Oda",95,2,"",""
+"Dört Kişilik Oda",100,3,"",""
+"Aile Odası",103,1,"",""
+"Standart Tek Kişilik Oda",38,4,"",""

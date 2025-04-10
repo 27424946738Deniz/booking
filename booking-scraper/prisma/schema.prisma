@@ -1,0 +1,57 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Hotel {
+  id                  Int                @id @default(autoincrement())
+  name                String
+  url                 String?
+  location            String?
+  address             String?
+  district            String?
+  scrapeDate          DateTime           @default(now())
+  totalAvailableRooms Int                @default(0)
+  minRoomPrice        Float?
+  currency            String?            @default("TRY")
+  rating              Float?
+  reviewCount         Int?
+  amenities           String[]
+  images              String[]
+  description         String?
+  rooms               Room[]
+
+  @@index([name])
+  @@index([district])
+  @@index([scrapeDate])
+}
+
+model Room {
+  id                 Int      @id @default(autoincrement())
+  hotelId            Int
+  roomName           String
+  roomsLeft          Int      @default(0)
+  price              Float?
+  originalPrice      Float?
+  currency           String?  @default("TRY")
+  mealPlan           String?
+  cancelPolicy       String?
+  occupancy          Int?
+  hasPromotion       Boolean  @default(false)
+  promotionDetails   String?
+  scrapeDate         DateTime @default(now())
+  hotel              Hotel    @relation(fields: [hotelId], references: [id])
+
+  @@index([hotelId])
+  @@index([scrapeDate])
+}

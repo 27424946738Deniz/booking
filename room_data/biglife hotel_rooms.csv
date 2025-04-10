@@ -1,0 +1,13 @@
+RoomName,Price,RoomsLeft,MealPlan,CancelPolicy
+"Ekonomik Çift Kişilik Oda",24,8,"",""
+"Ekonomik Çift Kişilik Oda",27,4,"",""
+"Çift Kişilik veya İki Yataklı Oda",30,8,"",""
+"Çift Kişilik Oda - Spa Küvetli",41,5,"",""
+"Deluxe King Oda",45,3,"",""
+"Stüdyo - Spa Küvetli",58,4,"",""
+"Üç Kişilik Oda - Ortak Banyolu",38,5,"",""
+"Standart Üç Kişilik Oda",43,7,"",""
+"Lüks Üç Kişilik Oda",47,5,"",""
+"Dört Kişilik Oda - Ortak Banyolu",56,8,"",""
+"Deluxe Aile Odası",60,4,"",""
+"Standart Tek Kişilik Oda",24,10,"",""

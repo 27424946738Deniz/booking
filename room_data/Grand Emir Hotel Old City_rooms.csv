@@ -1,0 +1,6 @@
+RoomName,Price,RoomsLeft,MealPlan,CancelPolicy
+"Ekonomik Çift Kişilik Oda",30,10,"",""
+"Standart Çift Kişilik veya İki Yataklı Oda",33,2,"",""
+"Standart Üç Kişilik Oda",39,10,"",""
+"Superior Çift Kişilik veya İki Yataklı Oda - Deniz Manzaralı",45,1,"",""
+"Ekonomik Dört Kişilik Oda",52,10,"",""

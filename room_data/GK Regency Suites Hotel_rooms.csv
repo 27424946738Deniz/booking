@@ -1,0 +1,6 @@
+RoomName,Price,RoomsLeft,MealPlan,CancelPolicy
+"Standart Çift Kişilik Oda",60,8,"",""
+"Superior Çift Kişilik Oda",68,4,"",""
+"Standart Üç Kişilik Oda",77,2,"",""
+"İki Bağlantılı Aile Odası",120,4,"",""
+"Üç Adet Bağlantılı Aile Odası",171,3,"",""

@@ -1,0 +1,8 @@
+RoomName,Price,RoomsLeft,MealPlan,CancelPolicy
+"Çift Kişilik Oda",30,1,"",""
+"İki Yataklı Oda",32,1,"",""
+"Stüdyo - Balkonlu",33,2,"",""
+"Çift Kişilik Oda - Balkonlu",34,1,"",""
+"Süit - Balkonlu",35,2,"",""
+"Aile Süiti",46,1,"",""
+"Tek Kişilik Ekonomik Oda",27,1,"",""

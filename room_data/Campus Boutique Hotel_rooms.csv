@@ -1,0 +1,5 @@
+RoomName,Price,RoomsLeft,MealPlan,CancelPolicy
+"İki Yataklı Oda",23,1,"",""
+"Çift Kişilik Oda",19,2,"",""
+"Standart Çift Kişilik veya İki Yataklı Oda",23,1,"",""
+"Tek Kişilik Oda",20,1,"",""

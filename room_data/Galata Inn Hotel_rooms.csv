@@ -1,0 +1,4 @@
+RoomName,Price,RoomsLeft,MealPlan,CancelPolicy
+"Standart Ekonomik Oda",33,1,"",""
+"Standart Çift Kişilik Oda",37,1,"",""
+"Superior Çift Kişilik Oda",41,2,"",""

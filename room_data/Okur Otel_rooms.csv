@@ -1,0 +1,7 @@
+RoomName,Price,RoomsLeft,MealPlan,CancelPolicy
+"Ekonomik İki Yataklı Oda",74,10,"",""
+"Standart İki Yataklı Oda",75,10,"",""
+"Standart Üç Kişilik Oda",115,4,"",""
+"Dört Kişilik Standart Oda",138,4,"",""
+"Tek Kişilik Ekonomik Oda",49,10,"",""
+"Standart Tek Kişilik Oda",55,10,"",""

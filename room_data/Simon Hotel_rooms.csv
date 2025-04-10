@@ -1,0 +1,4 @@
+RoomName,Price,RoomsLeft,MealPlan,CancelPolicy
+"Çift Kişilik Oda",30,7,"",""
+"Tek Kişilik Oda",21,4,"",""
+"Küçük Çift Kişilik Oda",25,3,"",""
