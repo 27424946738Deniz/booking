@@ -1,0 +1,36 @@
+name: Docker Build and Push to ACR (dev)
+
+on:
+  push:
+    branches:
+      - main
+
+env:
+  REGISTRY: ${{ secrets.REGISTRY_LOGIN_SERVER }}
+  APP_NAME: "booking-scraper"
+  DOCKER_FILEPATH: "Dockerfile"
+
+jobs:
+  build-and-push-dev:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout source code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+
+      - name: Login to ACR
+        uses: azure/docker-login@v1
+        with:
+          login-server: ${{ env.REGISTRY }}
+          username: ${{ secrets.REGISTRY_USERNAME }}
+          password: ${{ secrets.REGISTRY_PASSWORD }}
+
+      - name: Build and Push Docker image to ACR (dev)
+        run: |
+          IMAGE_NAME=${{ env.REGISTRY }}/${{ env.APP_NAME }}:dev
+
+          docker build -f ${{ env.DOCKER_FILEPATH }} -t $IMAGE_NAME .
+          docker push $IMAGE_NAME
