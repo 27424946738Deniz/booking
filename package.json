@@ -1,13 +1,15 @@
 {
   "name": "booking-scraper",
   "version": "1.0.0",
+  "type": "module",
   "main": "src/index.js",
   "scripts": {
-    "start": "node src/index.js",
+    "start": "node src/room-scraper/scraper/run_room_scraper_specific.cjs",
     "dev": "NODE_ENV=development node src/index.js",
     "migrate": "npx prisma migrate dev",
     "studio": "npx prisma studio",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "postinstall": "npx prisma generate"
   },
   "keywords": [
     "booking",

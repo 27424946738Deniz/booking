@@ -3,12 +3,13 @@ const { scrapeHotelRooms } = require('./scraper/roomScraper');
 const { saveHotelRoomData, disconnectDatabase, prisma } = require('./models/database');
 const logger = require('./utils/logger');
 const path = require('path');
+const { runScraper } = require("./scraper/run_room_scraper_specific")
 
 /**
  * Oda scraper uygulamasını başlat
  * @param {string} linksFile - Otel linklerini içeren dosyanın yolu
  */
-async function start(linksFile) {
+async function start() {
   try {
     // Veritabanı bağlantısını kontrol et
     try {
@@ -23,7 +24,7 @@ async function start(linksFile) {
     const startTime = Date.now();
     
     // Scraping işlemini başlat
-    const results = await scrapeHotelRooms(linksFile);
+    const results = await runScraper();
     
     // Sonuçları veritabanına kaydet
     let successCount = 0;
@@ -71,8 +72,8 @@ async function start(linksFile) {
 
 // Komut satırı argümanlarını işle
 if (process.argv.length >= 3) {
-  const linksFile = path.resolve(process.argv[2]);
-  start(linksFile);
+  //const linksFile = path.resolve(process.argv[2]);
+  start();
 } else {
   logger.error('Link dosyası belirtilmedi!');
   logger.info('Kullanım: node src/room-scraper/index.js <links_file>');

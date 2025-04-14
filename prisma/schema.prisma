@@ -10,66 +10,45 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
+  url = env("DATABASE_URL")
 }
 
 model Hotel {
   id                  Int      @id @default(autoincrement())
-  name                String
-  url                 String   @unique
+  name                String   @unique
+  url                 String   @db.Text
   location            String?
   rating              Float?
-  scrapeDate          DateTime @default(now())
-  // minPrice alanı HotelDailyData'ya taşındı
-  // totalAvailableRooms alanı HotelDailyData'ya taşındı
-  currency            String?  @default("TRY") // Bu genel bilgi olarak kalabilir
-  rooms               Room[]
-  dailyHotelData      HotelDailyData[] // Otel bazlı günlük veriler için ilişki
+  availabilities      Availability[]
 
   @@index([name])
   @@index([location])
+}
+
+model Availability {
+  id                  Int       @id @default(autoincrement())
+  hotelId             Int
+  hotel               Hotel     @relation(fields: [hotelId], references: [id])
+  scrapeDate          DateTime  @default(now())
+  minPrice            Float?
+  totalAvailableRooms Int       @default(0)
+  currency            String?   @default("TRY")
+  fetchSuccess        Boolean
+  rooms               Room[]
+
+  @@index([hotelId])
   @@index([scrapeDate])
 }
 
 model Room {
-  id                Int      @id @default(autoincrement())
-  hotelId           Int
+  id                Int         @id @default(autoincrement())
+  availabilityId    Int
+  availability      Availability  @relation(fields: [availabilityId], references: [id])
   roomName          String
-  hotel             Hotel    @relation(fields: [hotelId], references: [id])
-  dailyData         RoomDailyData[] // Günlük veriler için ilişki
+  roomsLeft         Int         @default(0) 
+  price             Float?             
 
-  @@index([hotelId])
-  @@unique([hotelId, roomName]) // hotelId ve roomName kombinasyonu benzersiz olmalı
+  @@index([availabilityId])
 }
 
-model RoomDailyData {
-  id            Int      @id @default(autoincrement())
-  roomId        Int
-  date          DateTime @db.Date // Sadece tarih bilgisi saklamak için
-  roomsLeft     Int      @default(0)
-  price         Float?
-  originalPrice Float?
-  currency      String?  @default("TRY")
-  mealPlan      String?
-  cancelPolicy  String?
-  scrapeDate    DateTime @default(now()) // Bu kaydın scrape edilme zamanı
-  room          Room     @relation(fields: [roomId], references: [id], onDelete: Cascade) // Oda silinirse bu kayıtlar da silinsin
-
-  @@unique([roomId, date]) // Aynı oda için aynı tarihte tek kayıt olmalı
-  @@index([roomId])
-  @@index([date])
-  @@index([scrapeDate])
-}
-model HotelDailyData {
-  id                  Int      @id @default(autoincrement())
-  hotelId             Int
-  date                DateTime @db.Date // Verinin ait olduğu tarih (örn: check-in)
-  minPrice            Float?            // O gün bulunan en düşük fiyat
-  totalAvailableRooms Int               // O gün bulunan toplam müsait oda
-  scrapeTimestamp     DateTime @default(now()) // Bu kaydın oluşturulma/güncellenme zamanı
-  hotel               Hotel    @relation(fields: [hotelId], references: [id], onDelete: Cascade)
-
-  @@unique([hotelId, date]) // Aynı otel için aynı tarihte tek kayıt olmalı
-  @@index([hotelId])
-  @@index([date])
-}
+// RoomDailyData modeli kaldırıldı
