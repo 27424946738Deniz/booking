@@ -1,5 +1,5 @@
 # ---------- Builder Stage ----------
-    FROM node:20-bullseye AS builder
+    FROM node:18-buster AS builder
 
     WORKDIR /app
     
@@ -20,7 +20,7 @@
     COPY . .
     
     # ---------- Production Stage ----------
-    FROM node:20-bullseye
+    FROM node:18-buster
     
     WORKDIR /app
     
