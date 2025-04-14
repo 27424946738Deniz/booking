@@ -1,32 +1,32 @@
 {
-  "name": "booking-scraper",
+  "name": "bookingdata",
   "version": "1.0.0",
-  "main": "src/index.js",
-  "scripts": {
-    "start": "node src/index.js",
-    "dev": "NODE_ENV=development node src/index.js",
-    "migrate": "npx prisma migrate dev",
-    "studio": "npx prisma studio",
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
-  "keywords": [
-    "booking",
-    "scraper",
-    "selenium",
-    "web-scraping",
-    "nodejs"
-  ],
-  "author": "",
-  "license": "MIT",
-  "description": "Booking.com otel verilerini toplamak için scraper",
+  "main": "index.js",
   "dependencies": {
     "@prisma/client": "^5.22.0",
-    "chromedriver": "latest",
-    "csv-parser": "^3.2.0",
     "dotenv": "^16.4.7",
-    "piscina": "^4.9.2",
-    "prisma": "^5.0.0",
-    "selenium-webdriver": "^4.30.0",
+    "piscina": "^4.2.0",
+    "prisma": "^5.22.0",
+    "selenium-webdriver": "^4.19.0",
     "winston": "^3.17.0"
-  }
+  },
+  "devDependencies": {},
+  "scripts": {
+    "start": "node src/index.js",
+    "import-hotels": "node src/scraper/insert-hotels.js hotel_details.txt"
+  },
+  "prisma": {
+    "schema": "src/config/prisma/schema.prisma"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/27424946738Deniz/booking.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/27424946738Deniz/booking/issues"
+  },
+  "homepage": "https://github.com/27424946738Deniz/booking#readme",
+  "description": ""
 }

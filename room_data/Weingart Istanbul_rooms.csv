@@ -1,9 +1,0 @@
-RoomName,Price,RoomsLeft,MealPlan,CancelPolicy
-"Ekonomik Çift Kişilik veya İki Yataklı Oda",46,10,"",""
-"Standart Çift Kişilik veya İki Yataklı Oda",58,10,"",""
-"Superior Çift Kişilik veya İki Yataklı Oda",81,10,"",""
-"Standart Üç Kişilik Oda",93,10,"",""
-"Bağlantılı İki Çift Kişilik Oda",162,10,"",""
-"Tek Kişilik Ekonomik Oda",42,10,"",""
-"Standart Tek Kişilik Oda",52,10,"",""
-"Superior Tek Kişilik Oda",73,10,"",""
