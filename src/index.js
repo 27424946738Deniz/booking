@@ -1,63 +1,95 @@
 require('dotenv').config();
-const { scrapeHotels } = require('./scraper/scrapeHotels');
+const { disconnectDatabase, prisma } = require('./data/database');
 const logger = require('./utils/logger');
-// Spesifik URL'i tanımla
-const specificSearchUrl = 'https://www.booking.com/searchresults.tr.html?label=gen173nr-1BCAso5AFCFnNoZXJhdG9uLWlzdGFuYnVsLWNpdHlIM1gEaKkBiAEBmAEouAEYyAEM2AEB6AEBiAIBqAIEuAL0kdi_BsACAdICJDZhN2NmNzJkLWNmNDAtNDk0NS1iM2Y5LTA5NzI3MzZhNWY3NdgCBeACAQ&sid=e082a73bda0b0c5924a050a08177296b&aid=304142&ss=%C4%B0stanbul&ssne=%C4%B0stanbul&ssne_untouched=%C4%B0stanbul&lang=tr&src=index&dest_id=-755070&dest_type=city&checkin=2025-04-09&checkout=2025-04-10&group_adults=2&no_rooms=1&group_children=0&nflt=price%3DEUR-80-85-1';
+const { runScraper } = require("./scraper/run_room_scraper_specific.cjs")
 
 /**
- * Belirtilen tek bir URL için otelleri scrape eden ana fonksiyon.
+ * Oda scraper uygulamasını başlat
+ * @param {string} linksFile - Otel linklerini içeren dosyanın yolu
  */
-async function runSingleUrlScraping() {
-  logger.info('Tek URL için otel scraping işlemi başlatılıyor...');
-  logger.info(`URL: ${specificSearchUrl}`);
-  const overallStartTime = Date.now();
-  let totalHotelsScraped = 0;
-  let totalErrors = 0;
-
+async function start() {
   try {
-    const results = await scrapeHotels(specificSearchUrl, {
-      maxHotels: 1000, // Bu ayarları isterseniz değiştirebilirsiniz
-      maxPagesToLoad: 50,
-    });
-
-    totalHotelsScraped = results.totalHotels;
-    totalErrors = results.errors.length;
-
+    // Veritabanı bağlantısını kontrol et
+    try {
+      await prisma.$connect();
+      logger.info('Veritabanı bağlantısı başarılı');
+    } catch (dbError) {
+      logger.error(`Veritabanı bağlantısı başarısız: ${dbError.message}`);
+      process.exit(1);
+    }
+    
+    // Başlangıç zamanını kaydet
+    const startTime = Date.now();
+    
+    // Scraping işlemini başlat
+    const results = await runScraper();
+    
+    // Sonuçları veritabanına kaydet
+    let successCount = 0;
+    let errorCount = 0;
+    let totalRooms = 0;
+    
+    // for (const hotelData of results) {
+    //   try {
+    //     if (hotelData.error) {
+    //       errorCount++;
+    //       continue;
+    //     }
+        
+    //     await saveHotelRoomData(hotelData);
+    //     successCount++;
+    //     totalRooms += hotelData.totalAvailableRooms;
+    //   } catch (error) {
+    //     logger.error(`Otel kaydedilirken hata (${hotelData.url}): ${error.message}`);
+    //     errorCount++;
+    //   }
+    // }
+    
+    // Bitiş zamanını hesapla
+    const endTime = Date.now();
+    const durationMinutes = Math.round((endTime - startTime) / 60000 * 10) / 10;
+    
+    // Sonuçları göster
+    logger.info('================================================');
+    logger.info('Booking.com Oda Scraper İşlem Özeti:');
+    logger.info('================================================');
+    logger.info(`Toplam İşlenen Otel: ${results.length}`);
+    logger.info(`Başarılı: ${successCount}`);
+    logger.info(`Hatalı: ${errorCount}`);
+    logger.info(`Toplam Bulunan Oda: ${totalRooms}`);
+    logger.info(`İşlem Süresi: ${durationMinutes} dakika`);
+    logger.info('================================================');
+    
   } catch (error) {
-    logger.error(`URL işlenirken hata: ${error.message}`);
-    totalErrors++; // Genel hata sayacını artır
+    logger.error(`Uygulama hatası: ${error.message}`);
+    process.exit(1);
+  } finally {
+    await disconnectDatabase();
   }
-
-  const overallEndTime = Date.now();
-  const overallDurationMinutes = Math.round((overallEndTime - overallStartTime) / 60000 * 10) / 10;
-  logger.info('================================================');
-  logger.info('İşlem Özeti:');
-  logger.info('================================================');
-  logger.info(`Toplam İşlenen Otel: ${totalHotelsScraped}`);
-  logger.info(`Toplam Hata: ${totalErrors}`);
-  logger.info(`Toplam Süre: ${overallDurationMinutes} dakika`);
-  logger.info('================================================');
-  logger.info(`Dosya çıktıları (veriler eklenerek yazıldı):`);
-  logger.info(`- hotel_details.txt: Otel detaylarını içerir`);
-  logger.info(`- hotel_links.txt: Room scraper için URL listesini içerir`);
-  logger.info('================================================');
 }
 
-// Uygulamayı başlat
-runSingleUrlScraping().catch(err => {
-  logger.error(`Beklenmedik genel hata: ${err.message}`);
-  process.exit(1);
-});
+// // Komut satırı argümanlarını işle
+// if (process.argv.length >= 3) {
+//   //const linksFile = path.resolve(process.argv[2]);
+//   start();
+// } else {
+//   logger.error('Link dosyası belirtilmedi!');
+//   logger.info('Kullanım: node src/room-scraper/index.js <links_file>');
+//   logger.info('Örnek: node src/room-scraper/index.js hotel_links.txt');
+//   process.exit(1);
+// }
 
-// Kapanma sinyallerini yakala (readline kaldırıldığı için rl.close() gerekmez)
+start();
+
+// Kapanma sinyallerini yakala
 process.on('SIGINT', async () => {
-  logger.info('Uygulama kapatılıyor (SIGINT)...');
-  // Gerekirse burada ek temizleme işlemleri yapılabilir
+  logger.info('Uygulama kapatılıyor...');
+  await disconnectDatabase();
   process.exit(0);
 });
 
 process.on('SIGTERM', async () => {
-  logger.info('Uygulama kapatılıyor (SIGTERM)...');
-  // Gerekirse burada ek temizleme işlemleri yapılabilir
+  logger.info('Uygulama kapatılıyor...');
+  await disconnectDatabase();
   process.exit(0);
-});
+}); 

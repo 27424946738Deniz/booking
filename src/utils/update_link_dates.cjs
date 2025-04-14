@@ -1,7 +1,7 @@
 const fs = require('fs').promises;
 const path = require('path');
 const { URL, URLSearchParams } = require('url');
-const logger = require('./logger.cjs'); // Uzantıyı .cjs olarak güncelle
+const logger = require('./logger.js'); // Corrected extension to .js
 
 /**
  * Verilen tarihin YYYY-MM-DD formatında olup olmadığını kontrol eder.
