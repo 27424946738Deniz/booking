@@ -1,19 +1,24 @@
 {
   "name": "bookingdata",
   "version": "1.0.0",
-  "main": "index.js",
+  "main": "src/index.js",
   "dependencies": {
     "@prisma/client": "^5.22.0",
+    "cors": "^2.8.5",
     "dotenv": "^16.4.7",
+    "express": "^4.18.2",
     "piscina": "^4.2.0",
     "prisma": "^5.22.0",
     "selenium-webdriver": "^4.19.0",
+    "swagger-jsdoc": "^6.2.8",
+    "swagger-ui-express": "^5.0.0",
     "winston": "^3.17.0"
   },
   "devDependencies": {},
   "scripts": {
     "start": "node src/index.js",
-    "import-hotels": "node src/scraper/insert-hotels.js hotel_details.txt"
+    "import-hotels": "node src/scraper/insert-hotels.js hotel_details.txt",
+    "api": "node src/index.js"
   },
   "prisma": {
     "schema": "src/config/prisma/schema.prisma"

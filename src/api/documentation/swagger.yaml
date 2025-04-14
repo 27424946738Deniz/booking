@@ -1,0 +1,143 @@
+openapi: 3.0.0
+info:
+  title: Booking Data API
+  version: 1.0.0
+  description: API for scraping and managing hotel data from Booking.com
+
+servers:
+  - url: /api
+    description: API Server
+
+paths:
+  /health:
+    get:
+      summary: Health Check
+      description: Check if the application is alive and ready
+      tags:
+        - Health
+      responses:
+        '200':
+          description: Application is healthy
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: ok
+                  message:
+                    type: string
+                    example: Application is alive and ready
+                  timestamp:
+                    type: string
+                    format: date-time
+                    example: "2023-09-15T12:34:56.789Z"
+
+  /scrape:
+    post:
+      summary: Run Scraper
+      description: Trigger the hotel room scraper to collect data
+      tags:
+        - Scraper
+      responses:
+        '200':
+          description: Scraper completed successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  message:
+                    type: string
+                    example: Scraper completed successfully
+                  data:
+                    type: array
+                    items:
+                      type: object
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: error
+                  message:
+                    type: string
+                    example: Failed to run the scraper
+                  error:
+                    type: string
+
+  /insert-hotels:
+    post:
+      summary: Insert Hotels
+      description: Insert hotel data from a file into the database. Default file location you should enter "hotel_details.txt"
+      tags:
+        - Hotels
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - filePath
+              properties:
+                filePath:
+                  type: string
+                  description: Path to the file containing hotel data
+                  example: "hotel_details.txt"
+      responses:
+        '200':
+          description: Hotels inserted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  message:
+                    type: string
+                    example: Hotels have been successfully inserted/updated in the database
+                  data:
+                    type: object
+                    properties:
+                      filePath:
+                        type: string
+                        example: "hotel_details.txt"
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: error
+                  message:
+                    type: string
+                    example: File path is required
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: error
+                  message:
+                    type: string
+                    example: Failed to insert hotels
+                  error:
+                    type: string 
