@@ -85,5 +85,5 @@
     ENV NODE_ENV=production
     
     # Run the application
-    CMD ["node", "src/index.js"]
+    CMD ["node", "-e", "console.log('>>> NodeJS Container Test Log <<<'); setInterval(() => { console.log('Container is running...'); }, 10000);"]
     
