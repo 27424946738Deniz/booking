@@ -104,8 +104,8 @@ async function runScraper() {
 
   const pool = new piscina.Piscina({
     filename: path.resolve(__dirname, './worker.cjs'),
-    minThreads: Math.min(10, totalLinksForThisApp),
-    maxThreads: Math.min(10, totalLinksForThisApp),
+    minThreads: 1,
+    maxThreads: 1,
   });
 
   const tasks = hotelLinks.map((url, index) => {
