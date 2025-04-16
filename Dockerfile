@@ -84,6 +84,8 @@
     # Set environment variables
     ENV NODE_ENV=production
     
+    EXPOSE 80
+
     # Run the application
     CMD ["node", "src/index.js"]
     
