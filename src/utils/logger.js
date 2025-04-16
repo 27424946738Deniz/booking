@@ -23,13 +23,13 @@ const logger = winston.createLogger({
       )
     }),
     // Dosya çıktısı
-    // new winston.transports.File({
-    //   filename: 'logs/room-scraper-error.log',
-    //   level: 'error'
-    // }),
-    // new winston.transports.File({
-    //   filename: 'logs/room-scraper.log'
-    // })
+    new winston.transports.File({
+      filename: 'logs/room-scraper-error.log',
+      level: 'error'
+    }),
+    new winston.transports.File({
+      filename: 'logs/room-scraper.log'
+    })
   ]
 });
 
