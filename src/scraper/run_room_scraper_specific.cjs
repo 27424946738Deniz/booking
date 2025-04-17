@@ -214,15 +214,27 @@ async function runScraper() {
 // SIGINT/SIGTERM handlers remain the same
 
 process.on('SIGINT', async () => {
-  logger.info(`Uygulama kapatılıyor (SIGINT - App ${appIndex})...`);
-  await prisma.$disconnect().catch(e => logger.error(`Prisma disconnect hatası (SIGINT - App ${appIndex}): ${e.message}`));
+  logger.info(`Uygulama kapatılıyor (SIGINT - App ${process.env.APP_INDEX || 0})...`);
+  await prisma.$disconnect().catch(e => logger.error(`Prisma disconnect hatası (SIGINT - App ${process.env.APP_INDEX || 0}): ${e.message}`));
   process.exit(0);
 });
 
 process.on('SIGTERM', async () => {
-  logger.info(`Uygulama kapatılıyor (SIGTERM - App ${appIndex})...`);
-  await prisma.$disconnect().catch(e => logger.error(`Prisma disconnect hatası (SIGTERM - App ${appIndex}): ${e.message}`));
+  logger.info(`Uygulama kapatılıyor (SIGTERM - App ${process.env.APP_INDEX || 0})...`);
+  await prisma.$disconnect().catch(e => logger.error(`Prisma disconnect hatası (SIGTERM - App ${process.env.APP_INDEX || 0}): ${e.message}`));
   process.exit(0);
 });
 
-module.exports = { runScraper }; // Export the function
+// Betik doğrudan mı çalıştırıldı, yoksa require mı edildi?
+if (require.main === module) {
+  // Doğrudan çalıştırıldıysa runScraper'ı çağır
+  runScraper().catch(err => {
+    // Hata olursa logla ve çık
+    const appIndex = process.env.APP_INDEX || 0; // Hata mesajı için index'i al
+    logger.error(`Beklenmedik genel hata (App ${appIndex}): ${err.message}`);
+    process.exit(1);
+  });
+} else {
+  // Başka bir modül tarafından require edildiyse fonksiyonu export et
+  module.exports = { runScraper };
+}
