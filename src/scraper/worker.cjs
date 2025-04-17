@@ -220,10 +220,10 @@ module.exports = async ({ url, index, totalCount, env }) => {
     logger.info(`Check-in tarihi: ${checkinDateString}`);
 
     const originalIndex = index; // Gelen orijinal index'i sakla
-    const targetHotelId = originalIndex - 5; // Düzeltilmiş Hotel ID
+    const targetHotelId = originalIndex + 11368; // Veritabanı ID'lerinin yeni başlangıcına göre düzeltilmiş ID
 
     // <<< GÜNCELLENMİŞ DEBUG LOG >>>
-    logger.info(`>>> [DEBUG] Received index: ${originalIndex}, Using corrected Hotel ID: ${targetHotelId} (URL: ${cleanUrl})`);
+    logger.info(`>>> [DEBUG] Received index: ${originalIndex}, Using calculated target Hotel ID: ${targetHotelId} (URL: ${cleanUrl})`);
 
     // Initialize Chrome and scrape data
     const chromeOptions = new chrome.Options();
