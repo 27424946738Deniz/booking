@@ -219,7 +219,11 @@ module.exports = async ({ url, index, totalCount, env }) => {
     const checkinDateString = checkinDate.toISOString().split('T')[0];
     logger.info(`Check-in tarihi: ${checkinDateString}`);
 
-    const targetHotelId = index; // Use index directly as hotelId
+    const originalIndex = index; // Gelen orijinal index'i sakla
+    const targetHotelId = originalIndex - 5; // Düzeltilmiş Hotel ID
+
+    // <<< GÜNCELLENMİŞ DEBUG LOG >>>
+    logger.info(`>>> [DEBUG] Received index: ${originalIndex}, Using corrected Hotel ID: ${targetHotelId} (URL: ${cleanUrl})`);
 
     // Initialize Chrome and scrape data
     const chromeOptions = new chrome.Options();
@@ -263,7 +267,7 @@ module.exports = async ({ url, index, totalCount, env }) => {
             // Create availability record
             const availability = await prisma.availability.create({
               data: {
-                hotelId: targetHotelId, // Use the index here
+                hotelId: targetHotelId, // Düzeltilmiş ID kullanılıyor
                 scrapeDate: new Date(),
                 minPrice: Math.min(...scrapeResult.rooms.map(r => r.price || Infinity).filter(p => p !== Infinity)) || null,
                 totalAvailableRooms: scrapeResult.rooms.reduce((sum, room) => sum + (room.roomsLeft || 0), 0),
@@ -282,7 +286,7 @@ module.exports = async ({ url, index, totalCount, env }) => {
             savedRoomCount = scrapeResult.rooms.length;
             logger.info(`Availability ve ${savedRoomCount} oda verisi (Hotel ID: ${targetHotelId}) başarıyla kaydedildi.`);
           } catch (dbError) {
-            logger.error(`Veritabanı hatası (Hotel ID: ${targetHotelId}): ${dbError.message}`, { stack: dbError.stack });
+            logger.error(`Veritabanı hatası (Corrected Hotel ID: ${targetHotelId}): ${dbError.message}`, { stack: dbError.stack });
             throw dbError;
           }
         } else {
@@ -290,7 +294,7 @@ module.exports = async ({ url, index, totalCount, env }) => {
           // Create availability record with zero rooms
           await prisma.availability.create({
             data: {
-              hotelId: targetHotelId, // Use index here
+              hotelId: targetHotelId, // Düzeltilmiş ID kullanılıyor
               scrapeDate: new Date(),
               totalAvailableRooms: 0,
               currency: 'TRY',
@@ -306,7 +310,7 @@ module.exports = async ({ url, index, totalCount, env }) => {
         // Create availability record with zero rooms
         await prisma.availability.create({
           data: {
-            hotelId: targetHotelId, // Use index here
+            hotelId: targetHotelId, // Düzeltilmiş ID kullanılıyor
             scrapeDate: new Date(),
             totalAvailableRooms: 0,
             currency: 'TRY',
@@ -318,11 +322,11 @@ module.exports = async ({ url, index, totalCount, env }) => {
       case 'TABLE_NOT_FOUND':
         status = 'FAILED';
         errorMessage = 'Oda tablosu veya müsaitlik yok mesajı bulunamadı.';
-        logger.error(errorMessage + ` Hotel ID: ${targetHotelId}`);
+        logger.error(errorMessage + ` Corrected Hotel ID: ${targetHotelId}`);
         // Create availability record to mark the failed attempt
         await prisma.availability.create({
           data: {
-            hotelId: targetHotelId, // Use index here
+            hotelId: targetHotelId, // Düzeltilmiş ID kullanılıyor
             scrapeDate: new Date(),
             totalAvailableRooms: 0,
             currency: 'TRY',
@@ -338,7 +342,7 @@ module.exports = async ({ url, index, totalCount, env }) => {
         // Create availability record to mark the error
         await prisma.availability.create({
           data: {
-            hotelId: targetHotelId, // Use index here
+            hotelId: targetHotelId, // Düzeltilmiş ID kullanılıyor
             scrapeDate: new Date(),
             totalAvailableRooms: 0,
             currency: 'TRY',
@@ -349,8 +353,9 @@ module.exports = async ({ url, index, totalCount, env }) => {
     }
 
   } catch (error) {
-    const logHotelId = typeof targetHotelId !== 'undefined' ? targetHotelId : index; // Use index if targetHotelId isn't set yet
-    logger.error(`Genel Worker hatası (${cleanUrl}) (Hotel ID: ${logHotelId}): ${error.message}`, { stack: error.stack });
+    // Hata logunda hem orijinal index hem de düzeltilmiş ID'yi göstermek faydalı olabilir
+    const logHotelIdInfo = typeof targetHotelId !== 'undefined' ? `Corrected ID: ${targetHotelId} (from index ${originalIndex})` : `Index: ${index}`;
+    logger.error(`Genel Worker hatası (${cleanUrl}) (${logHotelIdInfo}): ${error.message}`, { stack: error.stack });
     errorMessage = error.message;
     status = 'FAILED';
   } finally {
