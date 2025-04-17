@@ -45,10 +45,21 @@ async function runScraper() {
   let totalRoomsSaved = 0;
   let totalRoomsFound = 0;
 
-  const today = new Date();
-  const tomorrow = new Date(today);
-  tomorrow.setDate(tomorrow.getDate() + 1);
-  logger.info(`Date objects created.`);
+  const now = new Date(); // O anki tarih ve saat
+  let checkinDateObj = new Date(now); // Check-in için başlangıç tarihi (bugün)
+
+  // Saat kontrolü (Sunucunun lokal saati)
+  if (now.getHours() >= 21) {
+    logger.info("Saat 21:00 veya sonrası, check-in tarihi yarına ayarlanıyor.");
+    checkinDateObj.setDate(checkinDateObj.getDate() + 1); // Tarihi bir gün ileri al
+  } else {
+    logger.info("Saat 21:00 öncesi, check-in tarihi bugün olarak kullanılıyor.");
+  }
+
+  let checkoutDateObj = new Date(checkinDateObj); // Check-out tarihi, check-in'den bir gün sonrası
+  checkoutDateObj.setDate(checkoutDateObj.getDate() + 1);
+
+  logger.info(`Date objects created.`); // Bu log mesajı teknik olarak artık tam doğru değil ama zararı yok
 
   const formatDate = (date) => {
     const year = date.getFullYear();
@@ -58,9 +69,11 @@ async function runScraper() {
   };
   logger.info(`formatDate function defined.`);
 
-  const checkinDate = formatDate(today);
-  const checkoutDate = formatDate(tomorrow);
-  logger.info(`Using checkinDate: ${checkinDate}, checkoutDate: ${checkoutDate}`);
+  // <<< DEĞİŞİKLİK >>> - Değişken isimleri güncellendi
+  const checkinDate = formatDate(checkinDateObj);
+  const checkoutDate = formatDate(checkoutDateObj);
+  // <<< DEĞİŞİKLİK SONU >>>
+  logger.info(`Using calculated checkinDate: ${checkinDate}, checkoutDate: ${checkoutDate}`);
 
   let allHotelLinks;
   logger.info(`Attempting to update link dates...`);
