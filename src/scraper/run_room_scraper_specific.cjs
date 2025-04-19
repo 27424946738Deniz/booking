@@ -11,10 +11,10 @@ const piscina = require('piscina');
 
 // --- Ayarlar ---
 // const inputFile = path.resolve(__dirname, '../../..', 'extracted_hotel_links_10-11_april_top20.txt'); // Removed file dependency
-// <<< DEĞİŞİKLİK: Worker sayısını sabit 7 yap >>>
+// <<< DEĞİŞİKLİK: Worker sayısını sabit 5 yap >>>
 // const numCPUs = os.cpus().length;
 // const numWorkers = Math.max(1, numCPUs - 1); // CPU tabanlı dinamik kaldırıldı
-const numWorkers = 7; // Sabit değer olarak 7 ayarlandı
+const numWorkers = 5; // Sabit değer olarak 5 ayarlandı
 // <<< BİTTİ >>>
 const separator = '==================================================';
 
@@ -122,8 +122,8 @@ async function runScraper() {
 
   const pool = new piscina.Piscina({
     filename: path.resolve(__dirname, './worker.cjs'),
-    minThreads: numWorkers, // Sabit 7 değeri kullanılıyor
-    maxThreads: numWorkers, // Sabit 7 değeri kullanılıyor
+    minThreads: numWorkers, // Sabit 5 değeri kullanılıyor
+    maxThreads: numWorkers, // Sabit 5 değeri kullanılıyor
   });
 
   const tasks = hotelLinks.map((url, index) => {
