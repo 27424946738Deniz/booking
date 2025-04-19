@@ -24,9 +24,15 @@
     
     WORKDIR /app
     
-    # Install necessary dependencies for Chromium and ChromeDriver
-    RUN apt-get update && apt-get install -y --no-install-recommends \
-        # Prerequisites
+    # Step 2: Install libssl1.1 separately first to isolate potential errors
+    RUN apt-get update --fix-missing && apt-get install -y --no-install-recommends \
+        openssl \
+        libssl1.1 \
+        && apt-get clean && rm -rf /var/lib/apt/lists/*
+    
+    # Step 1 & 3 & 5: Install other dependencies, Chrome, Chromedriver, and cleanup
+    RUN apt-get update --fix-missing && apt-get install -y --no-install-recommends \
+        # Prerequisites (wget, gnupg, ca-certificates added for key handling)
         wget \
         gnupg \
         ca-certificates \
@@ -66,18 +72,14 @@
         libxtst6 \
         lsb-release \
         xdg-utils \
-        # Install openssl 1.1 for Prisma
-        openssl libssl1.1 \
-        # --- REMOVED OLD DEBIAN PACKAGES ---
-        # chromium \
-        # chromium-driver \
+        # openssl and libssl1.1 are now installed in the previous step
         && \
         # --- Add Google Chrome GPG key using modern method --- 
         wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | gpg --dearmor -o /usr/share/keyrings/google-chrome-keyring.gpg && \
         # --- Add Google Chrome repo referencing the key ---
         echo "deb [arch=amd64 signed-by=/usr/share/keyrings/google-chrome-keyring.gpg] http://dl.google.com/linux/chrome/deb/ stable main" > /etc/apt/sources.list.d/google-chrome.list && \
         # --- Install Google Chrome --- 
-        apt-get update && \
+        apt-get update --fix-missing && \
         apt-get install -y google-chrome-stable --no-install-recommends && \
         # --- INSTALL LATEST CHROMEDRIVER (using LATEST_RELEASE endpoint) --- 
         CHROME_MAJOR_VERSION=$(google-chrome --version | cut -f 3 -d ' ' | cut -d '.' -f 1) && \
