@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scraper Control Panel</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            line-height: 1.6;
+            padding: 20px;
+            background-color: #f4f7f6;
+            color: #333;
+        }
+        .container {
+            max-width: 800px;
+            margin: auto;
+            background: #fff;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            text-align: center;
+            color: #4CAF50; /* Green */
+            margin-bottom: 30px;
+        }
+        button {
+            display: block;
+            width: 100%;
+            padding: 15px;
+            font-size: 1.2em;
+            color: white;
+            background-color: #4CAF50; /* Green */
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            margin-bottom: 30px;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        #results {
+            margin-top: 20px;
+            padding: 0;
+            list-style: none;
+        }
+        #results li {
+            background-color: #e9e9e9;
+            margin-bottom: 10px;
+            padding: 15px;
+            border-radius: 5px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 1.1em;
+        }
+        .status {
+            font-weight: bold;
+            padding: 5px 10px;
+            border-radius: 4px;
+            color: white;
+            min-width: 80px;
+            text-align: center;
+        }
+        .status-pending { background-color: #ffc107; } /* Amber */
+        .status-success { background-color: #4CAF50; } /* Green */
+        .status-error { background-color: #f44336; }   /* Red */
+        .spinner {
+          border: 4px solid #f3f3f3; 
+          border-top: 4px solid #4CAF50; 
+          border-radius: 50%;
+          width: 20px;
+          height: 20px;
+          animation: spin 1s linear infinite;
+          display: inline-block;
+          margin-left: 10px;
+        }
+        @keyframes spin {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Scraper Control Panel</h1>
+        <button id="triggerButton">Trigger All Scrapers (with 5s delay)</button>
+        <ul id="results"></ul>
+    </div>
+
+    <script>
+        const triggerButton = document.getElementById('triggerButton');
+        const resultsList = document.getElementById('results');
+        const appInstances = 10; // Total number of instances
+        const baseAppName = 'booking-scraper-instance';
+        const delayBetweenRequests = 5000; // 5000 milliseconds = 5 seconds
+
+        triggerButton.addEventListener('click', triggerScrapers);
+
+        async function triggerScrapers() {
+            triggerButton.disabled = true;
+            triggerButton.textContent = 'Triggering...';
+            resultsList.innerHTML = ''; // Clear previous results
+
+            const promises = [];
+            const instanceStatuses = [];
+
+            for (let i = 1; i <= appInstances; i++) {
+                const instanceNumber = String(i).padStart(3, '0'); // Format as 001, 002, ...
+                const appName = `${baseAppName}-${instanceNumber}`;
+                const url = `https://${appName}.azurewebsites.net/api/scrape`;
+                const listItem = document.createElement('li');
+                listItem.innerHTML = `<span>${appName}</span><span class="status status-pending">Pending <span class="spinner"></span></span>`;
+                resultsList.appendChild(listItem);
+                
+                instanceStatuses.push({ name: appName, element: listItem }); // Store element reference
+
+                promises.push(
+                    fetch(url, {
+                        method: 'POST',
+                        headers: {
+                            // 'Content-Type': 'application/json' // Body is empty for /scrape
+                        }
+                    }).then(response => ({ // Wrap response and potential error
+                        ok: response.ok,
+                        status: response.status,
+                        statusText: response.statusText,
+                        instanceIndex: i - 1 // Store index to update the correct list item
+                    })).catch(error => ({ // Catch network errors
+                        ok: false,
+                        status: 'Network Error',
+                        statusText: error.message,
+                        instanceIndex: i - 1
+                    }))
+                );
+            }
+
+            // Wait for all requests to settle (either succeed or fail)
+            const results = await Promise.allSettled(promises);
+
+            results.forEach(result => {
+                if (result.status === 'fulfilled') {
+                    const data = result.value;
+                    const statusElement = instanceStatuses[data.instanceIndex].element.querySelector('.status');
+                    statusElement.innerHTML = ''; // Clear pending spinner
+                    
+                    if (data.ok) {
+                        statusElement.textContent = `Success (${data.status})`;
+                        statusElement.className = 'status status-success';
+                    } else {
+                        statusElement.textContent = `Error (${data.status})`;
+                        statusElement.className = 'status status-error';
+                        console.error(`Error for ${instanceStatuses[data.instanceIndex].name}: ${data.status} ${data.statusText}`);
+                    }
+                } else {
+                    // This case should ideally not happen often with the .catch added to fetch
+                    // but handle it just in case Promise.allSettled itself fails for a promise
+                    const instanceIndex = promises.findIndex(p => p === result.reason?.promise); // Try to find index
+                    if (instanceIndex !== -1) {
+                         const statusElement = instanceStatuses[instanceIndex].element.querySelector('.status');
+                         statusElement.innerHTML = ''; 
+                         statusElement.textContent = 'JS Error';
+                         statusElement.className = 'status status-error';
+                    }
+                    console.error('Unhandled promise rejection in Promise.allSettled:', result.reason);
+                }
+            });
+
+            triggerButton.disabled = false;
+            triggerButton.textContent = 'Trigger All Scrapers (with 5s delay)';
+        }
+
+        // Function to delay execution
+        function sleep(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
+        }
+
+        // Populate initial list
+        for (let i = 1; i <= appInstances; i++) {
+            const instanceNum = String(i).padStart(3, '0');
+            const listItem = document.createElement('li');
+            listItem.id = `instance-${instanceNum}`;
+            listItem.innerHTML = `
+                <span>Instance ${instanceNum} (booking-scraper-instance-${instanceNum})</span>
+                <span class="status status-pending">Pending</span>
+            `;
+            resultsList.appendChild(listItem);
+        }
+
+        triggerButton.addEventListener('click', async () => {
+            triggerButton.disabled = true;
+            triggerButton.textContent = 'Triggering...';
+
+            for (let i = 1; i <= appInstances; i++) {
+                const instanceNum = String(i).padStart(3, '0');
+                const url = `https://booking-scraper-instance-${instanceNum}.azurewebsites.net/api/scrape`;
+                const listItem = document.getElementById(`instance-${instanceNum}`);
+                const statusSpan = listItem.querySelector('.status');
+
+                // Update status to running
+                statusSpan.textContent = 'Triggering...';
+                statusSpan.className = 'status status-running';
+
+                try {
+                    const response = await fetch(url, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                            // Add any other necessary headers here
+                        },
+                        // Add body if required by your API, e.g., body: JSON.stringify({})
+                    });
+
+                    if (response.ok) {
+                        // Consider successful trigger if response is ok (e.g., 200, 202 Accepted)
+                        statusSpan.textContent = 'Triggered (OK)';
+                        statusSpan.className = 'status status-success';
+                        // Optionally display success message from response body if available
+                        // const result = await response.json();
+                        // console.log(`Instance ${instanceNum} success:`, result);
+                    } else {
+                        // Handle non-OK responses (e.g., 4xx, 5xx errors)
+                        statusSpan.textContent = `Error: ${response.status}`; // Display status code
+                        statusSpan.className = 'status status-error';
+                        console.error(`Instance ${instanceNum} failed: ${response.status} ${response.statusText}`);
+                        try {
+                            const errorBody = await response.text(); // Try to get error body
+                            console.error(`Error body for ${instanceNum}: ${errorBody}`);
+                        } catch (e) {/* Ignore if body cannot be read */}
+                    }
+                } catch (error) {
+                    // Handle network errors or exceptions during fetch
+                    statusSpan.textContent = 'Fetch Error';
+                    statusSpan.className = 'status status-error';
+                    console.error(`Instance ${instanceNum} fetch error:`, error);
+                }
+
+                // Wait before triggering the next instance, unless it's the last one
+                if (i < appInstances) {
+                    await sleep(delayBetweenRequests);
+                }
+            }
+
+            triggerButton.disabled = false;
+            triggerButton.textContent = 'Trigger All Scrapers (with 5s delay)';
+        });
+    </script>
+</body>
+</html> 

@@ -1,0 +1,44 @@
+{"level":"info","message":"Room scraper başlatılıyor (Piscina - Prisma Veritabanı Kaydı)...","service":"room-scraper","timestamp":"2025-04-17 15:15:45"}
+{"level":"info","message":"Toplam Uygulama Sayısı (TOTAL_APPS): 1","service":"room-scraper","timestamp":"2025-04-17 15:15:45"}
+{"level":"info","message":"Bu Uygulamanın İndeksi (APP_INDEX): 0","service":"room-scraper","timestamp":"2025-04-17 15:15:45"}
+{"level":"info","message":"Worker sayısı (bu instance için): 7","service":"room-scraper","timestamp":"2025-04-17 15:15:45"}
+{"level":"info","message":"Room scraper başlatılıyor (Piscina - Prisma Veritabanı Kaydı)...","service":"room-scraper","timestamp":"2025-04-17 15:17:37"}
+{"level":"info","message":"Toplam Uygulama Sayısı (TOTAL_APPS): 1","service":"room-scraper","timestamp":"2025-04-17 15:17:37"}
+{"level":"info","message":"Bu Uygulamanın İndeksi (APP_INDEX): 0","service":"room-scraper","timestamp":"2025-04-17 15:17:37"}
+{"level":"info","message":"Worker sayısı (bu instance için): 7","service":"room-scraper","timestamp":"2025-04-17 15:17:37"}
+{"level":"info","message":"Date objects created.","service":"room-scraper","timestamp":"2025-04-17 15:17:37"}
+{"level":"info","message":"formatDate function defined.","service":"room-scraper","timestamp":"2025-04-17 15:17:37"}
+{"level":"info","message":"Using checkinDate: 2025-04-17, checkoutDate: 2025-04-18","service":"room-scraper","timestamp":"2025-04-17 15:17:37"}
+{"level":"info","message":"Attempting to update link dates...","service":"room-scraper","timestamp":"2025-04-17 15:17:37"}
+{"level":"info","message":"2391 link başarıyla güncellendi.","service":"room-scraper","timestamp":"2025-04-17 15:17:37"}
+{"level":"info","message":"updateLinkDatesFromArray returned 2391 links.","service":"room-scraper","timestamp":"2025-04-17 15:17:37"}
+{"level":"info","message":"Total global links after date update: 2391","service":"room-scraper","timestamp":"2025-04-17 15:17:37"}
+{"level":"info","message":"Calculated indices: startIndex=0, endIndex=2391","service":"room-scraper","timestamp":"2025-04-17 15:17:37"}
+{"level":"info","message":"Total links for this app instance (0): 2391","service":"room-scraper","timestamp":"2025-04-17 15:17:37"}
+{"level":"info","message":"Proceeding to create worker pool for 2391 links.","service":"room-scraper","timestamp":"2025-04-17 15:17:37"}
+{"level":"info","message":"Bu uygulama için 2391 görev worker havuzuna gönderildi, sonuçlar bekleniyor...","service":"room-scraper","timestamp":"2025-04-17 15:17:37"}
+{"level":"info","message":"Uygulama kapatılıyor (SIGINT - App 0)...","service":"room-scraper","timestamp":"2025-04-17 15:17:41"}
+{"level":"info","message":"Room scraper başlatılıyor (Piscina - Prisma Veritabanı Kaydı)...","service":"room-scraper","timestamp":"2025-04-17 15:18:50"}
+{"level":"info","message":"Toplam Uygulama Sayısı (TOTAL_APPS): 1","service":"room-scraper","timestamp":"2025-04-17 15:18:50"}
+{"level":"info","message":"Bu Uygulamanın İndeksi (APP_INDEX): 0","service":"room-scraper","timestamp":"2025-04-17 15:18:50"}
+{"level":"info","message":"Worker sayısı (bu instance için): 7","service":"room-scraper","timestamp":"2025-04-17 15:18:50"}
+{"level":"info","message":"Date objects created.","service":"room-scraper","timestamp":"2025-04-17 15:18:50"}
+{"level":"info","message":"formatDate function defined.","service":"room-scraper","timestamp":"2025-04-17 15:18:50"}
+{"level":"info","message":"Using checkinDate: 2025-04-17, checkoutDate: 2025-04-18","service":"room-scraper","timestamp":"2025-04-17 15:18:50"}
+{"level":"info","message":"Attempting to update link dates...","service":"room-scraper","timestamp":"2025-04-17 15:18:50"}
+{"level":"info","message":"2391 link başarıyla güncellendi.","service":"room-scraper","timestamp":"2025-04-17 15:18:50"}
+{"level":"info","message":"updateLinkDatesFromArray returned 2391 links.","service":"room-scraper","timestamp":"2025-04-17 15:18:50"}
+{"level":"info","message":"Total global links after date update: 2391","service":"room-scraper","timestamp":"2025-04-17 15:18:50"}
+{"level":"info","message":"Calculated indices: startIndex=0, endIndex=2391","service":"room-scraper","timestamp":"2025-04-17 15:18:50"}
+{"level":"info","message":"Total links for this app instance (0): 2391","service":"room-scraper","timestamp":"2025-04-17 15:18:50"}
+{"level":"info","message":"Proceeding to create worker pool for 2391 links.","service":"room-scraper","timestamp":"2025-04-17 15:18:50"}
+{"level":"info","message":"Bu uygulama için 2391 görev worker havuzuna gönderildi, sonuçlar bekleniyor...","service":"room-scraper","timestamp":"2025-04-17 15:18:50"}
+{"level":"info","message":"Uygulama kapatılıyor (SIGINT - App 0)...","service":"room-scraper","timestamp":"2025-04-17 15:20:37"}
+{"level":"info","message":"--- Spesifik URL Testi Başlatılıyor ---","service":"room-scraper","timestamp":"2025-04-17 20:51:17"}
+{"level":"info","message":"--- 961 Nolu Index/URL İşleniyor ---","service":"room-scraper","timestamp":"2025-04-17 20:51:17"}
+{"level":"info","message":"Sonuç (Index 961): {\"index\":961,\"url\":\"https://www.booking.com/hotel/tr/golden-sail-old-city.tr.html?label=gen173nr-1BCAso5AFCFnNoZXJhdG9uLWlzdGFuYnVsLWNpdHlIM1gEaKkBiAEBmAEouAEYyAEM2AEB6AEBiAIBqAIEuAL0kdi_BsACAdICJDZhN2NmNzJkLWNmNDAtNDk0NS1iM2Y5LTA5NzI3MzZhNWY3NdgCBeACAQ&sid=e082a73bda0b0c5924a050a08177296b&aid=304142&ucfs=1&arphpl=1&checkin=2025-04-17&checkout=2025-04-18&dest_id=-755070&dest_type=city&group_adults=2&req_adults=2&no_rooms=1&group_children=0&req_children=0&hpos=15&hapos=263&sr_order=popularity&nflt=price%3DEUR-120-125-1&srpvid=6c453c29c8ac03e5&srepoch=1744187636&all_sr_blocks=668284506_273496366_2_41_0&highlighted_blocks=668284506_273496366_2_41_0&matching_block_id=668284506_273496366_2_41_0&sr_pri_blocks=668284506_273496366_2_41_0__12325&from=searchresults\",\"status\":\"FAILED\",\"savedRoomCount\":0,\"foundRoomCount\":0,\"error\":\"\\nInvalid `prisma.availability.create()` invocation in\\n/Users/bourbaki/Desktop/bookingdata/src/scraper/worker.cjs:295:37\\n\\n  292 } else {\\n  293   logger.info('Oda tablosu bulundu ancak işlenecek/kaydedilecek oda verisi yok.');\\n  294   // Create availability record with zero rooms\\n→ 295   await prisma.availability.create(\\nForeign key constraint violated: `Availability_hotelId_fkey (index)`\",\"durationMs\":22895}","service":"room-scraper","timestamp":"2025-04-17 20:51:40"}
+{"level":"info","message":"--- 961 Nolu Index/URL Tamamlandı ---","service":"room-scraper","timestamp":"2025-04-17 20:51:40"}
+{"level":"info","message":"--- 962 Nolu Index/URL İşleniyor ---","service":"room-scraper","timestamp":"2025-04-17 20:51:40"}
+{"level":"info","message":"Sonuç (Index 962): {\"index\":962,\"url\":\"https://www.booking.com/hotel/tr/walton-hotels-pera-amp-taksim-beyoglu.tr.html?label=gen173nr-1BCAso5AFCFnNoZXJhdG9uLWlzdGFuYnVsLWNpdHlIM1gEaKkBiAEBmAEouAEYyAEM2AEB6AEBiAIBqAIEuAL0kdi_BsACAdICJDZhN2NmNzJkLWNmNDAtNDk0NS1iM2Y5LTA5NzI3MzZhNWY3NdgCBeACAQ&sid=e082a73bda0b0c5924a050a08177296b&aid=304142&ucfs=1&arphpl=1&checkin=2025-04-17&checkout=2025-04-18&dest_id=-755070&dest_type=city&group_adults=2&req_adults=2&no_rooms=1&group_children=0&req_children=0&hpos=11&hapos=259&sr_order=popularity&nflt=price%3DEUR-120-125-1&srpvid=6c453c29c8ac03e5&srepoch=1744187636&all_sr_blocks=282148204_107962174_0_0_0_809408&highlighted_blocks=282148204_107962174_0_0_0_809408&matching_block_id=282148204_107962174_0_0_0_809408&sr_pri_blocks=282148204_107962174_0_0_0_809408_12500&from=searchresults\",\"status\":\"FAILED\",\"savedRoomCount\":0,\"foundRoomCount\":2,\"error\":\"\\nInvalid `prisma.availability.create()` invocation in\\n/Users/bourbaki/Desktop/bookingdata/src/scraper/worker.cjs:268:60\\n\\n  265 if (foundRoomCount > 0) {\\n  266   try {\\n  267     // Create availability record\\n→ 268     const availability = await prisma.availability.create(\\nForeign key constraint violated: `Availability_hotelId_fkey (index)`\",\"durationMs\":5484}","service":"room-scraper","timestamp":"2025-04-17 20:51:45"}
+{"level":"info","message":"--- 962 Nolu Index/URL Tamamlandı ---","service":"room-scraper","timestamp":"2025-04-17 20:51:45"}
+{"level":"info","message":"--- Spesifik URL Testi Bitti ---","service":"room-scraper","timestamp":"2025-04-17 20:51:45"}

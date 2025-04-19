@@ -3,6 +3,7 @@ const { Builder, By } = require('selenium-webdriver');
 const chrome = require('selenium-webdriver/chrome');
 const { URL } = require('url');
 const { PrismaClient } = require('@prisma/client');
+const logger = require('../utils/logger.js'); // Ensure logger is required
 
 const logger = {
   info: (msg) => console.log(`[Worker ${process.pid}] INFO: ${msg}`),
@@ -173,207 +174,249 @@ function getCheckinDateFromUrl(urlString) {
 }
 
 // --- Worker Ana Fonksiyonu ---
-module.exports = async ({ url, index, totalCount, env }) => {
-  // Timeout, Disable Images ve User Agent'i tekrar env objesinden al
-  const TIMEOUT = parseInt(env.TIMEOUT || '120000');
-  const DISABLE_IMAGES = env.DISABLE_IMAGES === 'true';
-  const USER_AGENT = env.USER_AGENT;
+module.exports = async (workerData) => {
+  const { url, index, totalCount, env } = workerData;
+  const { DATABASE_URL, TIMEOUT, DISABLE_IMAGES, USER_AGENT } = env;
+  const timeoutMs = parseInt(TIMEOUT, 10) || 120000; // 120 saniye varsayılan
 
-  // --- ÖNERİLEN ÇÖZÜM --- 
-  // Worker işleminin kendi ortam değişkenini ayarla
-  // --- DATABASE_URL Handling ---
-  // Ensure DATABASE_URL from workerData.env is set for the worker process
-  // Rely on the DATABASE_URL provided by Azure App Service config (which should include sslmode=require)
-  if (env.DATABASE_URL) {
-    const cleanedUrl = env.DATABASE_URL.trim().replace(/^"|"$/g, ''); // Clean quotes just in case
-    process.env.DATABASE_URL = cleanedUrl;
-    logger.info(`Worker using DATABASE_URL from workerData.env (Quotes trimmed): >${process.env.DATABASE_URL}<`);
-    if (cleanedUrl !== env.DATABASE_URL) {
-       logger.warn('Original DATABASE_URL from workerData.env contained quotes!');
-    }
-  } else {
-    logger.error('CRITICAL: Worker did not receive DATABASE_URL in workerData.env! Cannot connect to DB.');
-    // Optional: throw an error here if DB connection is absolutely required to proceed
-    // throw new Error('DATABASE_URL not provided to worker');
-  }
-  // ---
+  const logPrefix = `[Worker ${process.pid}]`;
+  logger.info(`${logPrefix} Worker using DATABASE_URL from workerData.env (Quotes trimmed): >${DATABASE_URL ? DATABASE_URL.substring(0, 10) + '...' + DATABASE_URL.substring(DATABASE_URL.length - 5) : 'NOT PROVIDED'}<`);
 
-  // PrismaClient'ı başlatırken override'a gerek yok, process.env ayarlandı
-  const prisma = new PrismaClient();
+  const prisma = new PrismaClient({
+    datasources: {
+      db: {
+        url: DATABASE_URL,
+      },
+    },
+  });
 
-  let driver = null;
-  const cleanUrl = url.trim();
+  let driver;
   const startTime = Date.now();
-  let status = 'FAILED';
-  let errorMessage = null;
-  let savedRoomCount = 0;
-  let foundRoomCount = 0;
+  const checkinDate = new Date();
+  const checkoutDate = new Date();
+  // Saat 21:00 kontrolü ve tarih ayarlama (run_room_scraper_specific.cjs ile aynı mantık)
+  if (checkinDate.getHours() >= 21) {
+    checkinDate.setDate(checkinDate.getDate() + 1);
+  }
+  checkoutDate.setDate(checkinDate.getDate() + 1);
+
+  const formatDate = (date) => {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+  const checkinDateStr = formatDate(checkinDate);
+  // logger.info(`${logPrefix} Check-in tarihi: ${checkinDateStr}`); // This might be redundant if parent script logs it
+
+  // Otel ID'sini hesapla (run_room_scraper_specific.cjs'deki mantıkla aynı)
+  const targetHotelId = index + 11378; // booking-list.cjs'nin 0-index'li olduğunu varsayarak +1 ve offset
+  logger.info(`${logPrefix} >>> [DEBUG] Received index: ${index}, Using calculated target Hotel ID: ${targetHotelId} (URL: ${url})`);
 
   try {
-    // Bağlantı denemeden önce log
-    logger.info(`Worker attempting connection. DATABASE_URL: >${process.env.DATABASE_URL}<`);
-    logger.info(`Prisma Client Options (Internal): ${JSON.stringify(prisma._engineConfig?.datamodel?.datasources[0]?.url)}`); // Log internal URL if available
-    await prisma.$connect();
-    logger.info(`[${index}/${totalCount}] İşleniyor: ${cleanUrl}. Hotel ID (from index): ${index}`);
-    const checkinDate = getCheckinDateFromUrl(cleanUrl);
-    const checkinDateString = checkinDate.toISOString().split('T')[0];
-    logger.info(`Check-in tarihi: ${checkinDateString}`);
+    await prisma.$connect(); // Worker başlangıcında bağlan
 
-    const originalIndex = index; // Gelen orijinal index'i sakla
-    const targetHotelId = originalIndex + 11368; // Veritabanı ID'lerinin yeni başlangıcına göre düzeltilmiş ID
+    // --- WebDriver Ayarları ---
+    const options = new chrome.Options();
+    options.addArguments(
+      // '--headless', // Keep original headless for Chrome 90 compatibility - REMOVED
+      '--headless=new', // Use new headless mode for updated Chrome
+      '--no-sandbox', // Add no-sandbox
+      '--disable-gpu', // Add disable-gpu
+      '--disable-dev-shm-usage', // Add disable-dev-shm-usage
+      '--window-size=1920,1080' // Add window-size
+      // '--disable-extensions',
+      // '--disable-infobars',
+      // '--disable-popup-blocking',
+      // '--ignore-certificate-errors',
+      // '--disable-logging', // Çıktıyı azaltmak için loglamayı kapatabiliriz
+      // '--log-level=3', // Sadece ölümcül hataları göster
+      // '--silent' // Sessiz mod
+    );
 
-    // <<< GÜNCELLENMİŞ DEBUG LOG >>>
-    logger.info(`>>> [DEBUG] Received index: ${originalIndex}, Using calculated target Hotel ID: ${targetHotelId} (URL: ${cleanUrl})`);
+    // Resimleri devre dışı bırakma ayarı
+    if (DISABLE_IMAGES === 'true') {
+      logger.info(`${logPrefix} Disabling images.`);
+      options.setUserPreferences({ 'profile.managed_default_content_settings.images': 2 });
+    }
 
-    // Initialize Chrome and scrape data
-    const chromeOptions = new chrome.Options();
-    chromeOptions.addArguments('--headless=new');
-    chromeOptions.addArguments('--disable-gpu');
-    chromeOptions.addArguments('--no-sandbox');
-    chromeOptions.addArguments('--disable-dev-shm-usage');
-    chromeOptions.addArguments('--window-size=1920,1080');
+    // User-Agent ayarı
+    if (USER_AGENT) {
+      logger.info(`${logPrefix} Setting User-Agent to: ${USER_AGENT}`);
+      options.addArguments(`--user-agent=${USER_AGENT}`);
+    } else {
+       logger.info(`${logPrefix} Using default User-Agent.`);
+    }
+    // options.addArguments('--remote-debugging-port=9222'); // Hata ayıklama için gerekirse açılabilir
 
-    // --user-data-dir kaldırıldı, ChromeDriver'ın kendi profilini yönetmesine izin veriliyor
-    logger.info('Letting ChromeDriver manage its own temporary profile.');
-    let userDataDir = null; // Ensure variable is declared for finally block, but set to null
+    logger.info(`${logPrefix} Letting ChromeDriver manage its own temporary profile.`);
 
-    if (DISABLE_IMAGES) chromeOptions.addArguments('--blink-settings=imagesEnabled=false');
-    if (USER_AGENT) chromeOptions.addArguments(`--user-agent=${USER_AGENT}`);
-
+    // --- WebDriver Oluşturma ---
     driver = await new Builder()
       .forBrowser('chrome')
-      .setChromeOptions(chromeOptions)
+      .setChromeOptions(options)
+      // Gerekirse ChromeDriver yolunu belirtin:
+      // .setChromeService(new chrome.ServiceBuilder('/path/to/chromedriver'))
       .build();
+    logger.info(`${logPrefix} WebDriver built.`);
 
+    // Sayfa yükleme zaman aşımı ve script zaman aşımı ayarları
     await driver.manage().setTimeouts({
-      implicit: TIMEOUT / 6,
-      pageLoad: TIMEOUT,
-      script: TIMEOUT / 2
+      implicit: 0, // Örtük bekleme kullanma (Explicit Wait tercih edilir)
+      pageLoad: timeoutMs, // Sayfa yükleme için timeout
+      script: timeoutMs // Script çalıştırma için timeout
     });
+    logger.info(`${logPrefix} Timeouts set (pageLoad/script): ${timeoutMs}ms`);
 
-    await driver.get(cleanUrl);
-    logger.info('Otel sayfasına gidildi');
+    // --- Sayfaya Gitme ---
+    logger.info(`${logPrefix} [${index}/${totalCount}] İşleniyor: ${url}. Hotel ID (from index): ${index}`);
+    await driver.get(url);
+    logger.info(`${logPrefix} Otel sayfasına gidildi`);
 
-    const scrapeResult = await scrapeRoomDetails(driver);
-    foundRoomCount = scrapeResult.rooms.length;
+    // Sayfanın tam olarak yüklenmesini beklemek için strateji (Örnek: Oda tablosu görünene kadar)
+    // Body elementinin yüklenmesini bekleyelim (temel kontrol)
+    await driver.wait(until.elementLocated(By.css('body')), timeoutMs);
+    // Spesifik bir oda konteynerinin veya fiyatın görünmesini beklemek daha sağlam olabilir:
+    // await driver.wait(until.elementLocated(By.css('.some-room-container-selector')), timeoutMs);
+    // logger.info(`${logPrefix} Body element located, page likely loaded.`);
 
-    switch (scrapeResult.status) {
-      case 'FOUND':
-        status = 'SUCCESS';
-        logger.info(`Scraping başarılı, ${foundRoomCount} oda bulundu. Veritabanına kaydediliyor...`);
-        
-        if (foundRoomCount > 0) {
-          try {
-            // Create availability record
-            const availability = await prisma.availability.create({
-              data: {
-                hotelId: targetHotelId, // Düzeltilmiş ID kullanılıyor
-                scrapeDate: new Date(),
-                minPrice: Math.min(...scrapeResult.rooms.map(r => r.price || Infinity).filter(p => p !== Infinity)) || null,
-                totalAvailableRooms: scrapeResult.rooms.reduce((sum, room) => sum + (room.roomsLeft || 0), 0),
-                currency: 'TRY',
-                fetchSuccess: true,
-                rooms: {
-                  create: scrapeResult.rooms.map(room => ({
-                    roomName: room.roomName,
-                    roomsLeft: room.roomsLeft || 0,
-                    price: room.price
-                  }))
-                }
-              }
-            });
-            
-            savedRoomCount = scrapeResult.rooms.length;
-            logger.info(`Availability ve ${savedRoomCount} oda verisi (Hotel ID: ${targetHotelId}) başarıyla kaydedildi.`);
-          } catch (dbError) {
-            logger.error(`Veritabanı hatası (Corrected Hotel ID: ${targetHotelId}): ${dbError.message}`, { stack: dbError.stack });
-            throw dbError;
-          }
-        } else {
-          logger.info('Oda tablosu bulundu ancak işlenecek/kaydedilecek oda verisi yok.');
-          // Create availability record with zero rooms
-          await prisma.availability.create({
-            data: {
-              hotelId: targetHotelId, // Düzeltilmiş ID kullanılıyor
-              scrapeDate: new Date(),
-              totalAvailableRooms: 0,
-              currency: 'TRY',
-              fetchSuccess: true
-            }
-          });
-        }
-        break;
+    // --- Oda Bilgilerini Çekme ---
+    logger.info(`${logPrefix} Oda bilgileri toplanıyor...`);
 
-      case 'NO_AVAILABILITY':
-        status = 'SUCCESS';
-        logger.info('Otelde belirtilen tarihler için müsait oda bulunamadı.');
-        // Create availability record with zero rooms
-        await prisma.availability.create({
-          data: {
-            hotelId: targetHotelId, // Düzeltilmiş ID kullanılıyor
-            scrapeDate: new Date(),
-            totalAvailableRooms: 0,
-            currency: 'TRY',
-            fetchSuccess: true
-          }
-        });
-        break;
+    // Oda bloklarını bul (Selector'ı kontrol et) - Bu selector sayfaya göre değişebilir!
+    // Örnek: '.hprt-block', '.room-block', 'div[data-testid="room-block"]'
+    const roomBlocksSelector = By.css('div.hprt-table tbody tr'); // Bu sık kullanılan bir yapıdır, ama doğrula.
+    await driver.wait(until.elementLocated(roomBlocksSelector), timeoutMs / 2); // Timeout'un yarısı kadar bekle
+    const roomBlocks = await driver.findElements(roomBlocksSelector);
+    logger.info(`${logPrefix} ${roomBlocks.length} potansiyel oda bloğu bulundu.`);
 
-      case 'TABLE_NOT_FOUND':
-        status = 'FAILED';
-        errorMessage = 'Oda tablosu veya müsaitlik yok mesajı bulunamadı.';
-        logger.error(errorMessage + ` Corrected Hotel ID: ${targetHotelId}`);
-        // Create availability record to mark the failed attempt
-        await prisma.availability.create({
-          data: {
-            hotelId: targetHotelId, // Düzeltilmiş ID kullanılıyor
-            scrapeDate: new Date(),
-            totalAvailableRooms: 0,
-            currency: 'TRY',
-            fetchSuccess: false
-          }
-        });
-        break;
-
-      default:
-        status = 'FAILED';
-        errorMessage = scrapeResult.error || 'scrapeRoomDetails içinde bilinmeyen hata.';
-        logger.error(`scrapeRoomDetails hatası: ${errorMessage}`);
-        // Create availability record to mark the error
-        await prisma.availability.create({
-          data: {
-            hotelId: targetHotelId, // Düzeltilmiş ID kullanılıyor
-            scrapeDate: new Date(),
-            totalAvailableRooms: 0,
-            currency: 'TRY',
-            fetchSuccess: false
-          }
-        });
-        break;
+    if (roomBlocks.length === 0) {
+      logger.warn(`${logPrefix} Oda bloğu bulunamadı. Sayfa yapısı değişmiş olabilir veya oda yok. URL: ${url}`);
+      await driver.quit();
+      await prisma.$disconnect();
+      return { index, url, status: 'SUCCESS_NO_ROOMS', foundRoomCount: 0, savedRoomCount: 0, durationMs: Date.now() - startTime };
     }
+
+    const roomsData = [];
+    let roomsFoundInPage = 0;
+
+    for (const roomBlock of roomBlocks) {
+      try {
+        roomsFoundInPage++;
+        // Oda Adı (Selector'ı kontrol et)
+        const roomNameElement = await roomBlock.findElement(By.css('.hprt-roomtype-cell .hprt-roomtype-name')); // veya 'span[data-testid="room-name"]'
+        const roomName = await roomNameElement.getText();
+
+        // Fiyat (Selector'ı kontrol et)
+        const priceElement = await roomBlock.findElement(By.css('.bui-price-display__value')); // veya 'span[data-testid="price-and-discounted-price"]'
+        let priceText = await priceElement.getText();
+        priceText = priceText.replace(/[^\d.,]/g, '').replace(',', '.'); // Para birimi simgesi, TL vb. temizle, virgülü noktaya çevir
+        const price = parseFloat(priceText);
+
+        // Müsaitlik (Selector'ı kontrol et - Bazen sadece buton olur)
+        let availability = 'Available'; // Varsayılan
+        try {
+          // Örneğin "1 oda kaldı" gibi bir metin varsa veya "Seç" butonu aktifse
+          const availabilityElement = await roomBlock.findElement(By.css('.hprt-nos-select')); // Veya '.room--remaining' vb.
+          // Bazen müsaitlik durumu select dropdown içindeki option sayısıyla belirtilir.
+          const options = await availabilityElement.findElements(By.css('option'));
+          if (options.length <= 1 && (await options[0].getAttribute('value')) === '0') { // Eğer sadece "0" seçeneği varsa veya hiç option yoksa (selector'a göre değişir)
+            availability = 'Sold Out';
+          }
+        } catch (e) {
+          if (e.name === 'NoSuchElementError') {
+            // Element yoksa farklı bir yapı olabilir, belki de her zaman müsait? Veya farklı bir selector.
+            // Veya "Rezerve edildi" gibi bir yazı olabilir.
+             try {
+                await roomBlock.findElement(By.css('.soldout_property')); // Satıldı işareti var mı?
+                availability = 'Sold Out';
+             } catch (soldoutError) {
+                 // Satıldı işareti de yoksa, muhtemelen müsait kabul edebiliriz veya loglayabiliriz.
+                 logger.warn(`${logPrefix} Müsaitlik durumu net tespit edilemedi for room "${roomName}". Assuming Available. URL: ${url}`);
+             }
+          } else {
+            throw e; // Başka bir hata ise fırlat
+          }
+        }
+
+        if (roomName && !isNaN(price)) {
+          roomsData.push({
+            roomName: roomName.trim(),
+            price: price,
+            availability: availability.trim(),
+            checkinDate: checkinDateStr,
+            hotelId: targetHotelId // Hesaplanan hotelId'yi kullan
+          });
+          logger.info(`${logPrefix} Oda bulundu: "${roomName.trim()}", Fiyat: ${price}, Durum: ${availability.trim()}`);
+        } else {
+          logger.warn(`${logPrefix} Geçersiz oda verisi atlandı: Ad='${roomName}', Fiyat='${priceText}' URL: ${url}`);
+        }
+
+      } catch (e) {
+        if (e.name === 'NoSuchElementError') {
+          logger.warn(`${logPrefix} Oda detayı (isim, fiyat veya müsaitlik) bulunamadı. Bu oda bloğu atlanıyor. URL: ${url}`);
+        } else {
+          logger.error(`${logPrefix} Oda bloğu işlenirken hata: ${e.message} URL: ${url}`);
+        }
+        // Bu odanın işlenmesine devam etme, sonraki bloğa geç
+        continue;
+      }
+    }
+
+    // --- Veritabanına Kaydetme ---
+    let savedCount = 0;
+    if (roomsData.length > 0) {
+      logger.info(`${logPrefix} ${roomsData.length} geçerli oda verisi bulundu. Veritabanına kaydediliyor...`);
+      try {
+        const createPromises = roomsData.map(room =>
+          prisma.availability.create({
+            data: {
+              hotelId: room.hotelId,
+              roomName: room.roomName,
+              price: room.price,
+              checkinDate: new Date(room.checkinDate), // Tarihi Date objesine çevir
+              availability: room.availability,
+              scrapedAt: new Date()
+            },
+          }).catch(dbError => {
+            // Olası unique constraint hatası gibi durumları logla ama süreci durdurma
+            logger.error(`${logPrefix} Oda kaydetme hatası (HotelID: ${room.hotelId}, Oda: ${room.roomName}, Tarih: ${room.checkinDate}): ${dbError.message}`);
+            return null; // Başarısız olanı null olarak işaretle
+          })
+        );
+
+        const results = await Promise.all(createPromises);
+        savedCount = results.filter(r => r !== null).length; // Başarıyla kaydedilenleri say
+        logger.info(`${logPrefix} ${savedCount} / ${roomsData.length} oda verisi veritabanına kaydedildi (Hotel ID: ${targetHotelId}).`);
+
+      } catch (error) {
+        logger.error(`${logPrefix} Toplu oda kaydetme sırasında genel veritabanı hatası (Hotel ID: ${targetHotelId}): ${error.message}`);
+        // Bu durumda savedCount 0 kalacak
+      }
+    } else {
+      logger.info(`${logPrefix} Kaydedilecek geçerli oda verisi bulunamadı (Hotel ID: ${targetHotelId}).`);
+    }
+
+    // --- Temizlik ve Sonuç ---
+    await driver.quit();
+    logger.info(`${logPrefix} WebDriver kapatıldı.`);
+    await prisma.$disconnect(); // İşlem bitince bağlantıyı kes
+    const durationMs = Date.now() - startTime;
+    logger.info(`${logPrefix} [${index}/${totalCount}] Tamamlandı. Süre: ${durationMs}ms. Bulunan: ${roomsFoundInPage}, Kaydedilen: ${savedCount}. URL: ${url}`);
+    return { index, url, status: 'SUCCESS', foundRoomCount: roomsFoundInPage, savedRoomCount: savedCount, durationMs };
 
   } catch (error) {
-    // Hata logunda hem orijinal index hem de düzeltilmiş ID'yi göstermek faydalı olabilir
-    const logHotelIdInfo = typeof targetHotelId !== 'undefined' ? `Corrected ID: ${targetHotelId} (from index ${originalIndex})` : `Index: ${index}`;
-    logger.error(`Genel Worker hatası (${cleanUrl}) (${logHotelIdInfo}): ${error.message}`, { stack: error.stack });
-    errorMessage = error.message;
-    status = 'FAILED';
-  } finally {
+    const durationMs = Date.now() - startTime;
+    logger.error(`${logPrefix} Genel Worker hatası (${url}) (Index: ${index}): ${error.message}`, { stack: error.stack?.substring(0, 500) }); // Stack trace'i kısaltarak logla
     if (driver) {
-      await driver.quit().catch(e => logger.error(`Driver kapatılırken hata: ${e.message}`));
+      try {
+        await driver.quit();
+        logger.info(`${logPrefix} Hata sonrası WebDriver kapatıldı.`);
+      } catch (quitError) {
+        logger.error(`${logPrefix} Hata sonrası WebDriver kapatılırken ek hata: ${quitError.message}`);
+      }
     }
-    // Geçici user data dizinini silme kaldırıldı (userDataDir is null)
-    await prisma.$disconnect().catch(e => logger.error(`Prisma disconnect hatası: ${e.message}`));
+    await prisma.$disconnect().catch(e => logger.error(`${logPrefix} Hata sonrası Prisma disconnect hatası: ${e.message}`)); // Hata durumunda da disconnect dene
+    return { index, url, status: 'FAILED', error: error.message, foundRoomCount: 0, savedRoomCount: 0, durationMs };
   }
-
-  const endTime = Date.now();
-  return {
-    index: index,
-    url: cleanUrl,
-    status: status,
-    savedRoomCount: savedRoomCount,
-    foundRoomCount: foundRoomCount,
-    error: errorMessage,
-    durationMs: endTime - startTime
-  };
 };

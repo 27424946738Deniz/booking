@@ -27,6 +27,8 @@
     # Install necessary dependencies for Chromium and ChromeDriver
     RUN apt-get update && apt-get install -y --no-install-recommends \
         wget \
+        gnupg \
+        unzip \
         # Needed for Chromium / Headless mode
         fonts-liberation \
         libasound2 \
@@ -64,16 +66,31 @@
         xdg-utils \
         # Install openssl 1.1 for Prisma
         openssl libssl1.1 \
-        # Install Chromium and ChromeDriver from Debian repo
-        chromium \
-        chromium-driver \
+        # --- REMOVED OLD DEBIAN PACKAGES ---
+        # chromium \
+        # chromium-driver \
         && \
-        # Clean up
+        # --- INSTALL LATEST GOOGLE CHROME --- 
+        wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key add - && \
+        echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" >> /etc/apt/sources.list.d/google-chrome.list && \
+        apt-get update && \
+        apt-get install -y google-chrome-stable --no-install-recommends && \
+        # --- INSTALL LATEST CHROMEDRIVER --- 
+        # Get the latest stable Chrome version number
+        CHROME_VERSION=$(google-chrome --version | cut -f 3 -d ' ' | cut -d '.' -f 1) && \
+        # Get the corresponding Chromedriver version
+        CHROMEDRIVER_VERSION=$(wget -qO- https://chromedriver.storage.googleapis.com/LATEST_RELEASE_${CHROME_VERSION}) && \
+        echo "Using Chromedriver version: ${CHROMEDRIVER_VERSION}" && \
+        wget -q --continue -P /tmp "https://chromedriver.storage.googleapis.com/${CHROMEDRIVER_VERSION}/chromedriver_linux64.zip" && \
+        unzip /tmp/chromedriver_linux64.zip -d /usr/local/bin && \
+        rm /tmp/chromedriver_linux64.zip && \
+        # --- CLEANUP --- 
+        apt-get purge -y wget unzip gnupg && apt-get autoremove -y && \
         apt-get clean && \
-        rm -rf /var/lib/apt/lists/*
+        rm -rf /var/lib/apt/lists/* /etc/apt/sources.list.d/google-chrome.list
 
-    # Set PATH for ChromeDriver (chromium-driver package should put it in PATH already, but being explicit)
-    ENV PATH /usr/bin:$PATH
+    # Set PATH for ChromeDriver (should be in /usr/local/bin now)
+    # ENV PATH /usr/bin:$PATH # Keep default PATH which should include /usr/local/bin
 
     # Copy from builder
     COPY --from=builder /app/node_modules ./node_modules
