@@ -26,8 +26,10 @@
     
     # Install necessary dependencies for Chromium and ChromeDriver
     RUN apt-get update && apt-get install -y --no-install-recommends \
+        # Prerequisites
         wget \
         gnupg \
+        ca-certificates \
         unzip \
         # Needed for Chromium / Headless mode
         fonts-liberation \
@@ -70,24 +72,28 @@
         # chromium \
         # chromium-driver \
         && \
-        # --- INSTALL LATEST GOOGLE CHROME --- 
-        wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key add - && \
-        echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" >> /etc/apt/sources.list.d/google-chrome.list && \
+        # --- Add Google Chrome GPG key using modern method --- 
+        wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | gpg --dearmor -o /usr/share/keyrings/google-chrome-keyring.gpg && \
+        # --- Add Google Chrome repo referencing the key ---
+        echo "deb [arch=amd64 signed-by=/usr/share/keyrings/google-chrome-keyring.gpg] http://dl.google.com/linux/chrome/deb/ stable main" > /etc/apt/sources.list.d/google-chrome.list && \
+        # --- Install Google Chrome --- 
         apt-get update && \
         apt-get install -y google-chrome-stable --no-install-recommends && \
-        # --- INSTALL LATEST CHROMEDRIVER --- 
-        # Get the latest stable Chrome version number
-        CHROME_VERSION=$(google-chrome --version | cut -f 3 -d ' ' | cut -d '.' -f 1) && \
-        # Get the corresponding Chromedriver version
-        CHROMEDRIVER_VERSION=$(wget -qO- https://chromedriver.storage.googleapis.com/LATEST_RELEASE_${CHROME_VERSION}) && \
-        echo "Using Chromedriver version: ${CHROMEDRIVER_VERSION}" && \
+        # --- INSTALL LATEST CHROMEDRIVER (using LATEST_RELEASE endpoint) --- 
+        CHROME_MAJOR_VERSION=$(google-chrome --version | cut -f 3 -d ' ' | cut -d '.' -f 1) && \
+        CHROMEDRIVER_VERSION=$(wget -qO- https://chromedriver.storage.googleapis.com/LATEST_RELEASE_${CHROME_MAJOR_VERSION}) && \
+        echo "Installed Chrome major version: ${CHROME_MAJOR_VERSION}" && \
+        echo "Attempting to download Chromedriver version: ${CHROMEDRIVER_VERSION}" && \
         wget -q --continue -P /tmp "https://chromedriver.storage.googleapis.com/${CHROMEDRIVER_VERSION}/chromedriver_linux64.zip" && \
         unzip /tmp/chromedriver_linux64.zip -d /usr/local/bin && \
+        # Handle case where unzip creates a directory vs direct binary
+        if [ -f /usr/local/bin/chromedriver ]; then echo 'Chromedriver unzipped directly.'; else mv /usr/local/bin/chromedriver-linux64/chromedriver /usr/local/bin/chromedriver && rm -rf /usr/local/bin/chromedriver-linux64; fi && \
         rm /tmp/chromedriver_linux64.zip && \
+        chmod +x /usr/local/bin/chromedriver && \
         # --- CLEANUP --- 
-        apt-get purge -y wget unzip gnupg && apt-get autoremove -y && \
+        apt-get purge -y --auto-remove wget unzip gnupg && \
         apt-get clean && \
-        rm -rf /var/lib/apt/lists/* /etc/apt/sources.list.d/google-chrome.list
+        rm -rf /var/lib/apt/lists/* /etc/apt/sources.list.d/google-chrome.list /usr/share/keyrings/google-chrome-keyring.gpg
 
     # Set PATH for ChromeDriver (should be in /usr/local/bin now)
     # ENV PATH /usr/bin:$PATH # Keep default PATH which should include /usr/local/bin
