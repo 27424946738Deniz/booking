@@ -11,28 +11,20 @@ const insertHotelsPath = path.resolve(__dirname, '../../scraper/insert-hotels');
 /**
  * Run the scraper
  */
-router.post('/scrape', (req, res) => {
+router.post('/scrape', async (req, res) => {
   try {
     // Dynamically require the module only when needed
     const { runScraper } = require(scraperPath);
-    
-    // runScraper'ı çağır ama bitmesini bekleme (await yok)
-    runScraper().catch(error => {
-      // Arka planda bir hata olursa logla (isteğe yanıt zaten gönderildi)
-      console.error('Scraper background error:', error);
-    });
-
-    // Scraper'ın başladığına dair hemen yanıt gönder
-    res.status(202).json({ // 202 Accepted, isteğin kabul edildiğini ama işlemin devam ettiğini belirtir
+    const results = await runScraper();
+    res.status(200).json({
       status: 'success',
-      message: 'Scraper process started successfully.',
+      message: 'Scraper completed successfully',
     });
   } catch (error) {
-    // runScraper'ı başlatırken hemen bir hata olursa (require veya ilk çağrı anı)
-    console.error('Error initiating scraper:', error);
+    console.error('Error running scraper:', error);
     res.status(500).json({
       status: 'error',
-      message: 'Failed to initiate scraper process',
+      message: 'Failed to run the scraper',
       error: error.message
     });
   }
