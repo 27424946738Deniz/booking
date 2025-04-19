@@ -11,7 +11,11 @@ const piscina = require('piscina');
 
 // --- Ayarlar ---
 // const inputFile = path.resolve(__dirname, '../../..', 'extracted_hotel_links_10-11_april_top20.txt'); // Removed file dependency
-const numWorkers = Math.max(1, os.cpus().length - 1); // Dynamic worker count per app instance
+// <<< DEĞİŞİKLİK: Worker sayısını sabit 7 yap >>>
+// const numCPUs = os.cpus().length;
+// const numWorkers = Math.max(1, numCPUs - 1); // CPU tabanlı dinamik kaldırıldı
+const numWorkers = 7; // Sabit değer olarak 7 ayarlandı
+// <<< BİTTİ >>>
 const separator = '==================================================';
 
 // --- Ortam Değişkenlerinden Dağıtım Ayarlarını Oku ---
@@ -26,8 +30,9 @@ if (isNaN(totalApps) || isNaN(appIndex) || totalApps <= 0 || appIndex < 0 || app
 logger.info(`Room scraper başlatılıyor (Piscina - Prisma Veritabanı Kaydı)...`);
 logger.info(`Toplam Uygulama Sayısı (TOTAL_APPS): ${totalApps}`);
 logger.info(`Bu Uygulamanın İndeksi (APP_INDEX): ${appIndex}`);
-// logger.info(`Kullanılacak link dosyası: ${inputFile}`); // Removed
-logger.info(`Worker sayısı (bu instance için): ${numWorkers}`);
+// <<< DEĞİŞİKLİK: Log mesajını güncelle >>>
+logger.info(`Worker count set to: ${numWorkers} (Fixed value)`);
+// <<< BİTTİ >>>
 
 const prisma = new PrismaClient();
 
@@ -117,8 +122,8 @@ async function runScraper() {
 
   const pool = new piscina.Piscina({
     filename: path.resolve(__dirname, './worker.cjs'),
-    minThreads: 4,
-    maxThreads: 4,
+    minThreads: numWorkers, // Sabit 7 değeri kullanılıyor
+    maxThreads: numWorkers, // Sabit 7 değeri kullanılıyor
   });
 
   const tasks = hotelLinks.map((url, index) => {
